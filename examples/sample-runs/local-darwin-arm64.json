@@ -1,0 +1,305 @@
+{
+  "checks": [
+    {
+      "evidence": {},
+      "id": "auditd.enabled",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "no audit rules found"
+    },
+    {
+      "evidence": {},
+      "id": "auditd.installed",
+      "remediation": "Install auditd via apt or dnf",
+      "remediation_id": "auditd_installed",
+      "status": "fail",
+      "summary": "auditd not installed"
+    },
+    {
+      "evidence": {},
+      "id": "auditd.log_dir_mode",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "/var/log/audit missing"
+    },
+    {
+      "evidence": {},
+      "id": "auditd.sudoers_rules",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "no audit rules found"
+    },
+    {
+      "evidence": {},
+      "id": "fs.tmp_nodev",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "/proc/mounts unreadable"
+    },
+    {
+      "evidence": {},
+      "id": "fs.tmp_nosuid",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "/proc/mounts unreadable"
+    },
+    {
+      "evidence": {},
+      "id": "fs.tmp_separate",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "/proc/mounts unreadable"
+    },
+    {
+      "evidence": {},
+      "id": "fs.usb_storage_disabled",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "/etc/modprobe.d missing"
+    },
+    {
+      "evidence": {},
+      "id": "fs.var_log_separate",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "/proc/mounts unreadable"
+    },
+    {
+      "evidence": {},
+      "id": "kernel.aslr",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "randomize_va_space not exposed"
+    },
+    {
+      "evidence": {},
+      "id": "kernel.kptr_restrict",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "kptr_restrict not exposed"
+    },
+    {
+      "evidence": {},
+      "id": "kernel.protected_links",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "protected_hardlinks/symlinks not exposed"
+    },
+    {
+      "evidence": {},
+      "id": "net.firewall_active",
+      "remediation": "Install ufw, allow SSH, and enable the firewall",
+      "remediation_id": "net_firewall_active",
+      "status": "fail",
+      "summary": "no active firewall configuration detected"
+    },
+    {
+      "evidence": {},
+      "id": "net.icmp_redirects",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "net.ipv4.conf.all.accept_redirects not exposed via /proc/sys"
+    },
+    {
+      "evidence": {},
+      "id": "net.ipv6_ra_disabled",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "ipv6 not exposed in /proc/sys"
+    },
+    {
+      "evidence": {},
+      "id": "net.log_martians",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "net.ipv4.conf.all.log_martians not exposed via /proc/sys"
+    },
+    {
+      "evidence": {},
+      "id": "net.source_route",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "net.ipv4.conf.all.accept_source_route not exposed via /proc/sys"
+    },
+    {
+      "evidence": {
+        "expected": "<= 5"
+      },
+      "id": "pam.account_lockout",
+      "remediation": "Set faillock deny=5 in PAM auth stack",
+      "remediation_id": "pam_account_lockout",
+      "status": "fail",
+      "summary": "no faillock/tally2 deny= directive found"
+    },
+    {
+      "evidence": {
+        "expected": ">= 4"
+      },
+      "id": "pam.password_classes",
+      "remediation": "Set pwquality minclass to 4",
+      "remediation_id": "pam_password_classes",
+      "status": "fail",
+      "summary": "pwquality.conf missing minclass"
+    },
+    {
+      "evidence": {
+        "expected": ">= 14"
+      },
+      "id": "pam.password_minlen",
+      "remediation": "Set pwquality minlen to 14",
+      "remediation_id": "pam_password_minlen",
+      "status": "fail",
+      "summary": "pwquality.conf missing minlen"
+    },
+    {
+      "evidence": {},
+      "id": "pam.password_reuse",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "/etc/pam.d/common-password missing"
+    },
+    {
+      "evidence": {},
+      "id": "pkg.required_present",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "dpkg status file not present"
+    },
+    {
+      "evidence": {},
+      "id": "pkg.signature_verification",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "/etc/apt missing"
+    },
+    {
+      "evidence": {},
+      "id": "pkg.unattended_upgrades",
+      "remediation": "Enable apt unattended-upgrades via 20auto-upgrades",
+      "remediation_id": "pkg_unattended_upgrades",
+      "status": "fail",
+      "summary": "20auto-upgrades not present"
+    },
+    {
+      "evidence": {},
+      "id": "pkg.unwanted_absent",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "unavailable",
+      "summary": "dpkg status file not present"
+    },
+    {
+      "evidence": {
+        "current": "none",
+        "expected": "path to banner file"
+      },
+      "id": "ssh.banner",
+      "remediation": "Install /etc/issue.net banner and point sshd at it",
+      "remediation_id": "ssh_banner",
+      "status": "fail",
+      "summary": "Banner not configured"
+    },
+    {
+      "evidence": {
+        "current": 0,
+        "expected": "1..300"
+      },
+      "id": "ssh.client_alive_interval",
+      "remediation": "Set ClientAliveInterval=300 and ClientAliveCountMax=3 for sshd",
+      "remediation_id": "ssh_client_alive_interval",
+      "status": "fail",
+      "summary": "ClientAliveInterval=0; expected 1..300"
+    },
+    {
+      "evidence": {
+        "current": 6,
+        "expected": "<= 4"
+      },
+      "id": "ssh.max_auth_tries",
+      "remediation": "Set sshd MaxAuthTries to 4",
+      "remediation_id": "ssh_max_auth_tries",
+      "status": "fail",
+      "summary": "MaxAuthTries=6; expected <= 4"
+    },
+    {
+      "evidence": {},
+      "id": "ssh.max_sessions",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "pass",
+      "summary": "MaxSessions=10"
+    },
+    {
+      "evidence": {
+        "current": "yes",
+        "expected": "no"
+      },
+      "id": "ssh.password_authentication",
+      "remediation": "Disable PasswordAuthentication in sshd (key-based auth only)",
+      "remediation_id": "ssh_password_authentication",
+      "status": "fail",
+      "summary": "PasswordAuthentication=yes; expected no"
+    },
+    {
+      "evidence": {
+        "current": "prohibit-password",
+        "expected": "no"
+      },
+      "id": "ssh.permit_root_login",
+      "remediation": "Set PermitRootLogin to no in sshd_config and reload sshd",
+      "remediation_id": "ssh_permit_root_login",
+      "status": "fail",
+      "summary": "PermitRootLogin=prohibit-password; expected no"
+    },
+    {
+      "evidence": {},
+      "id": "ssh.protocol_2",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "pass",
+      "summary": "protocol 2 only"
+    },
+    {
+      "evidence": {},
+      "id": "ssh.x11_forwarding",
+      "remediation": null,
+      "remediation_id": null,
+      "status": "pass",
+      "summary": "X11Forwarding=no"
+    }
+  ],
+  "host": {
+    "arch": "arm64",
+    "hostname": "Sais-MacBook-Pro.local",
+    "kernel": "25.0.0",
+    "os": "unknown"
+  },
+  "policy": "cis-ubuntu-22",
+  "schema_version": 1,
+  "started_at": "2026-05-08T04:50:27.384198Z",
+  "summary": {
+    "fail": 11,
+    "pass": 3,
+    "skip": 0,
+    "total": 33,
+    "unavailable": 19
+  }
+}

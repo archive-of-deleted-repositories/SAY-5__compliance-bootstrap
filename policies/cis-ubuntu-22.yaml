@@ -1,0 +1,48 @@
+# CIS Ubuntu 22.04 baseline policy.
+#
+# `enabled` is the list of check_ids the audit will run. A check not in
+# this list is effectively skipped — it does not contribute to the
+# summary. `disabled` is informational only (kept for diff readability
+# when overlaying strict.yaml, etc.).
+#
+# `overrides` is reserved for future use (per-check threshold tuning).
+# Today every check ships with its own thresholds in code; adding a
+# threshold override field requires touching the check class.
+name: cis-ubuntu-22
+description: CIS Ubuntu 22.04 Server benchmark — baseline subset
+enabled:
+  - fs.tmp_separate
+  - fs.tmp_nodev
+  - fs.tmp_nosuid
+  - fs.var_log_separate
+  - fs.usb_storage_disabled
+  - ssh.protocol_2
+  - ssh.permit_root_login
+  - ssh.password_authentication
+  - ssh.max_auth_tries
+  - ssh.client_alive_interval
+  - ssh.x11_forwarding
+  - ssh.max_sessions
+  - ssh.banner
+  - pam.password_minlen
+  - pam.password_classes
+  - pam.password_reuse
+  - pam.account_lockout
+  - auditd.installed
+  - auditd.enabled
+  - auditd.log_dir_mode
+  - auditd.sudoers_rules
+  - net.icmp_redirects
+  - net.source_route
+  - net.log_martians
+  - net.ipv6_ra_disabled
+  - net.firewall_active
+  - pkg.required_present
+  - pkg.unwanted_absent
+  - pkg.unattended_upgrades
+  - pkg.signature_verification
+  - kernel.aslr
+  - kernel.kptr_restrict
+  - kernel.protected_links
+disabled: []
+overrides: {}

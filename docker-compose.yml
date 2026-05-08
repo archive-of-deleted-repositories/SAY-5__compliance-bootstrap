@@ -1,0 +1,19 @@
+services:
+  tool:
+    build:
+      context: .
+      target: tool
+    image: compliance-bootstrap-tool:dev
+    volumes:
+      - .:/work:ro
+
+  target:
+    build:
+      context: .
+      target: target
+    image: compliance-bootstrap-target:dev
+    # cap_add lets the in-container audit see kernel sysctl files; we
+    # never modify the host kernel from here.
+    cap_add:
+      - DAC_READ_SEARCH
+    command: ["sleep", "infinity"]

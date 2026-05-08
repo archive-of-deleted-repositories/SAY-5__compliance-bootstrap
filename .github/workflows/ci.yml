@@ -1,0 +1,177 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-py:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dev deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: ruff
+        run: python -m ruff check src tests
+      - name: black
+        run: python -m black --check src tests
+
+  typecheck:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dev deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - run: python -m mypy
+
+  lint-sh:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+      - name: shellcheck on every .sh
+        run: |
+          shellcheck --version
+          find scripts src/compliance_bootstrap/remediation/snippets \
+            -type f -name '*.sh' -print0 | xargs -0 shellcheck -x
+
+  test-py:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Unit tests with coverage
+        run: |
+          python -m pytest tests/unit -v \
+            --cov=src/compliance_bootstrap --cov-report=term-missing \
+            --cov-fail-under=80
+
+  audit-self-test:
+    # Run the audit against the GH Actions ubuntu-24.04 runner itself.
+    # The runner is not a hardened CIS host, so most checks fail; the
+    # commit captures the honest pass/fail/skip/unavailable counts.
+    runs-on: ubuntu-24.04
+    needs: [test-py]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Audit the runner
+        run: |
+          mkdir -p examples/sample-runs
+          # The runner is bare — `audit` will exit 1 because there are
+          # fails. We capture both reports and continue.
+          set +e
+          compliance-bootstrap audit \
+            --policy cis-ubuntu-22 \
+            --json examples/sample-runs/ubuntu-24.04-runner.json \
+            --md   examples/sample-runs/ubuntu-24.04-runner.md
+          rc=$?
+          set -e
+          # 0 (all pass) or 1 (some fail) are both acceptable;
+          # anything else is a runner crash.
+          [ "$rc" -eq 0 ] || [ "$rc" -eq 1 ]
+      - name: Show summary
+        run: |
+          python -c "import json; d=json.load(open('examples/sample-runs/ubuntu-24.04-runner.json')); print(json.dumps(d['summary'], indent=2))"
+      - name: Upload sample report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-runs
+          path: examples/sample-runs/
+
+  remediation-smoke:
+    # Build the multi-stage image, run audit + remediate inside the
+    # debian:bookworm `target` stage, assert the post-remediation fail
+    # count is strictly less than the pre-remediation fail count.
+    runs-on: ubuntu-24.04
+    needs: [test-py]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build target image
+        run: docker build --target target -t compliance-bootstrap-target:test .
+      - name: Pre-audit
+        run: |
+          docker run --rm \
+            -v "${PWD}/examples/smoke:/work" \
+            compliance-bootstrap-target:test \
+            bash -lc "compliance-bootstrap audit --policy cis-ubuntu-22 --json /work/pre.json --md /work/pre.md || true"
+        # Mount-back so the next step can read the JSON.
+      - name: Run remediation snippets and re-audit
+        run: |
+          mkdir -p examples/smoke
+          docker run --rm \
+            -v "${PWD}/examples/smoke:/work" \
+            compliance-bootstrap-target:test \
+            bash -lc 'set -e
+              compliance-bootstrap audit --policy cis-ubuntu-22 \
+                --json /work/pre.json --md /work/pre.md || true
+              compliance-bootstrap remediate --policy cis-ubuntu-22 --apply || true
+              compliance-bootstrap audit --policy cis-ubuntu-22 \
+                --json /work/post.json --md /work/post.md || true'
+      - name: Assert fewer fails post-remediation
+        run: |
+          python - <<'PY'
+          import json
+          pre = json.load(open("examples/smoke/pre.json"))["summary"]
+          post = json.load(open("examples/smoke/post.json"))["summary"]
+          print(f"pre:  {pre}")
+          print(f"post: {post}")
+          assert post["fail"] < pre["fail"], "remediation did not reduce fail count"
+          PY
+      - name: Upload smoke artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-runs
+          path: examples/smoke/
+
+  build-image:
+    runs-on: ubuntu-24.04
+    needs: [lint-py, lint-sh, typecheck, test-py]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build tool image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: tool
+          platforms: linux/amd64,linux/arm64
+          push: false
