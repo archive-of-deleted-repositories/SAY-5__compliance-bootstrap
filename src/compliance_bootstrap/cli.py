@@ -153,6 +153,7 @@ def remediate(policy_name: str, policies_dir: Path, apply: bool, root: Path | No
         click.echo("nothing to remediate")
         return
 
+    snippet_failures = 0
     for result in fails:
         rid = result.remediation_id or ""
         path = snippet_path(rid)
@@ -175,14 +176,20 @@ def remediate(policy_name: str, policies_dir: Path, apply: bool, root: Path | No
         if proc.returncode != 0:
             click.echo(proc.stderr, err=True, nl=False)
             click.echo(f"[fail] {rid} exited {proc.returncode}", err=True)
-            sys.exit(1)
+            snippet_failures += 1
+            # We deliberately continue: a missing apt index or systemctl
+            # binary should not block the dozen other snippets that have
+            # nothing to do with apt or systemd.
 
     if apply:
         # Re-audit and exit with the new state's code.
         results2 = run_audit(policy, ctx)
         s = sum(1 for r in results2 if r.status is Status.FAIL)
-        click.echo(f"post-remediation: {s} fail(s) remaining")
-        if s > 0:
+        click.echo(
+            f"post-remediation: {s} fail(s) remaining "
+            f"({snippet_failures} snippet(s) errored during apply)"
+        )
+        if s > 0 or snippet_failures > 0:
             sys.exit(1)
 
 

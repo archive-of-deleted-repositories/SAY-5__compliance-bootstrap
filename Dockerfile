@@ -6,7 +6,7 @@
 #
 # The two stages share a layer cache for apt-installed packages.
 
-FROM python:3.12-slim AS tool
+FROM python:3.12-slim-bookworm AS tool
 
 WORKDIR /opt/compliance-bootstrap
 COPY pyproject.toml README.md LICENSE ./
@@ -33,14 +33,20 @@ RUN apt-get update -y \
         procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the tool into the target image so a single container can run
-# both the audit and the remediation snippets against itself.
-COPY --from=tool /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+# Copy the tool *and* its Python 3.12 interpreter from the `tool` stage
+# so the `compliance-bootstrap` console script (shebang
+# `#!/usr/local/bin/python`) can actually execute. Debian bookworm only
+# ships Python 3.11 system-wide; the site-packages we copy are 3.12, so
+# we need the matching interpreter or every invocation fails with
+# "cannot execute: required file not found".
+COPY --from=tool /usr/local/bin/python3.12 /usr/local/bin/python3.12
+COPY --from=tool /usr/local/bin/python3 /usr/local/bin/python3
+COPY --from=tool /usr/local/bin/python /usr/local/bin/python
+COPY --from=tool /usr/local/lib/python3.12 /usr/local/lib/python3.12
+COPY --from=tool /usr/local/lib/libpython3.12.so.1.0 /usr/local/lib/libpython3.12.so.1.0
 COPY --from=tool /usr/local/bin/compliance-bootstrap /usr/local/bin/compliance-bootstrap
 COPY --from=tool /opt/compliance-bootstrap /opt/compliance-bootstrap
-RUN apt-get update -y \
-    && apt-get install -y --no-install-recommends python3 python3-pip \
-    && rm -rf /var/lib/apt/lists/*
+RUN ldconfig
 
 WORKDIR /opt/compliance-bootstrap
 CMD ["bash"]

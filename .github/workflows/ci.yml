@@ -124,25 +124,30 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build target image
         run: docker build --target target -t compliance-bootstrap-target:test .
-      - name: Pre-audit
-        run: |
-          docker run --rm \
-            -v "${PWD}/examples/smoke:/work" \
-            compliance-bootstrap-target:test \
-            bash -lc "compliance-bootstrap audit --policy cis-ubuntu-22 --json /work/pre.json --md /work/pre.md || true"
-        # Mount-back so the next step can read the JSON.
-      - name: Run remediation snippets and re-audit
+      - name: Prepare host smoke dir
         run: |
           mkdir -p examples/smoke
+          # The container runs as root and writes here; make sure the
+          # path exists before docker mounts it (otherwise docker
+          # creates it as root and the upload-artifact step can still
+          # read it, but explicit is better).
+          chmod 0777 examples/smoke
+      - name: Run audit -> remediate -> audit inside the target
+        run: |
           docker run --rm \
             -v "${PWD}/examples/smoke:/work" \
             compliance-bootstrap-target:test \
-            bash -lc 'set -e
+            bash -lc '
+              set -e
+              # Refresh apt index so snippets that install packages
+              # have something to work with.
+              apt-get update -y >/dev/null 2>&1 || true
               compliance-bootstrap audit --policy cis-ubuntu-22 \
                 --json /work/pre.json --md /work/pre.md || true
               compliance-bootstrap remediate --policy cis-ubuntu-22 --apply || true
               compliance-bootstrap audit --policy cis-ubuntu-22 \
-                --json /work/post.json --md /work/post.md || true'
+                --json /work/post.json --md /work/post.md || true
+            '
       - name: Assert fewer fails post-remediation
         run: |
           python - <<'PY'
