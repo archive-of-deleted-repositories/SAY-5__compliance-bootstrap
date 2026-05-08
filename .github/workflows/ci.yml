@@ -148,7 +148,7 @@ jobs:
               compliance-bootstrap audit --policy cis-ubuntu-22 \
                 --json /work/post.json --md /work/post.md || true
             '
-      - name: Assert fewer fails post-remediation
+      - name: Assert remediation increased pass count
         run: |
           python - <<'PY'
           import json
@@ -156,7 +156,21 @@ jobs:
           post = json.load(open("examples/smoke/post.json"))["summary"]
           print(f"pre:  {pre}")
           print(f"post: {post}")
-          assert post["fail"] < pre["fail"], "remediation did not reduce fail count"
+          # Remediation snippets install missing packages (auditd, ufw,
+          # …) which can flip a check from `unavailable` -> `fail` while
+          # still being net-positive. The honest invariant is that more
+          # checks pass post-remediation than pre, *and* the combined
+          # fail+unavailable count strictly drops.
+          assert post["pass"] > pre["pass"], (
+              f"remediation did not increase pass count "
+              f"(pre={pre['pass']}, post={post['pass']})"
+          )
+          pre_unhealthy = pre["fail"] + pre["unavailable"]
+          post_unhealthy = post["fail"] + post["unavailable"]
+          assert post_unhealthy < pre_unhealthy, (
+              f"remediation did not reduce fail+unavailable "
+              f"(pre={pre_unhealthy}, post={post_unhealthy})"
+          )
           PY
       - name: Upload smoke artefacts
         uses: actions/upload-artifact@v4
